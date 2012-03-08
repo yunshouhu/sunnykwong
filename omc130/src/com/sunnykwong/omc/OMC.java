@@ -73,7 +73,7 @@ import android.widget.Toast;
 public class OMC extends Application {
 	
 	static final boolean DEBUG = true;
-	static final boolean THEMESFROMCACHE = true;
+	static final boolean THEMESFROMCACHE = false;
 			
 	static String THISVERSION; 
 	static final boolean SINGLETON = false;
@@ -85,7 +85,6 @@ public class OMC extends Application {
 	static final String EXTENDEDPACK = "https://sites.google.com/a/xaffron.com/xaffron-software/OMCThemes_v127.omc";
 	static final String EXTENDEDPACKBACKUP = "https://s3.amazonaws.com/Xaffron/OMCThemes_v127.omc";
 	static final String DEFAULTTHEME = "IceLock";
-	static final Intent FGINTENT = new Intent("com.sunnykwong.omc.FGSERVICE");
 	static final Intent BGINTENT = new Intent("com.sunnykwong.omc.BGSERVICE");
 	static final Intent WIDGETREFRESHINTENT = new Intent("com.sunnykwong.omc.WIDGET_REFRESH");
 	static final IntentFilter PREFSINTENTFILT = new IntentFilter("com.sunnykwong.omc.WIDGET_CONFIG");
@@ -163,7 +162,6 @@ public class OMC extends Application {
     static OMCConfigReceiver cRC;
 	static OMCAlarmReceiver aRC;
     static boolean SCREENON = true; 	// Is the screen on?
-    static boolean FG = false;
 
 	static boolean STARTERPACKDLED = false;
 
@@ -205,7 +203,7 @@ public class OMC extends Application {
     static final Class<?>[] mStartForegroundSignature = new Class[] {int.class, Notification.class};
     static final Class<?>[] mStopForegroundSignature = new Class[] {boolean.class};
     static final Class<?>[] mSetForegroundSignature = new Class[] {boolean.class};
-    static Intent SVCSTARTINTENT, CREDITSINTENT, PREFSINTENT, ALARMCLOCKINTENT;
+    static Intent CREDITSINTENT, PREFSINTENT, ALARMCLOCKINTENT;
     static Intent GETSTARTERPACKINTENT, GETBACKUPPACKINTENT, GETEXTENDEDPACKINTENT, IMPORTTHEMEINTENT, DUMMYINTENT, OMCMARKETINTENT, OMCWEATHERFORECASTINTENT;
     static PendingIntent FGPENDING, BGPENDING, PREFSPENDING, ALARMCLOCKPENDING, WEATHERFORECASTPENDING;
     static Notification FGNOTIFICIATION;
@@ -257,9 +255,7 @@ public class OMC extends Application {
 		OMC.aRC = new OMCAlarmReceiver();
 		OMC.cRC = new OMCConfigReceiver();
 		
-		OMC.FGPENDING = PendingIntent.getBroadcast(OMC.CONTEXT, 0, OMC.FGINTENT, 0);
 		OMC.BGPENDING = PendingIntent.getBroadcast(OMC.CONTEXT, 0, OMC.BGINTENT, 0);
-		OMC.SVCSTARTINTENT = new Intent(OMC.CONTEXT, OMCService.class);
 		OMC.CREDITSINTENT = new Intent(OMC.CONTEXT, OMCCreditsActivity.class);
 		OMC.PREFSINTENT = new Intent(OMC.CONTEXT, OMCPrefActivity.class);
 		OMC.IMPORTTHEMEINTENT = new Intent(OMC.CONTEXT, OMCThemeImportActivity.class);
@@ -280,11 +276,6 @@ public class OMC extends Application {
 		
 		OMC.CACHEPATH = this.getCacheDir().getAbsolutePath() + "/";
 		
-		OMC.FGNOTIFICIATION = new Notification(this.getResources().getIdentifier(OMC.APPICON, "drawable", OMC.PKGNAME), 
-				"",
-        		System.currentTimeMillis());
-        OMC.FGNOTIFICIATION.flags = OMC.FGNOTIFICIATION.flags|Notification.FLAG_ONGOING_EVENT|Notification.FLAG_NO_CLEAR;
-		
     	OMC.ALARMS = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
     	OMC.PKM = getPackageManager();
     	OMC.AM = getAssets();
@@ -296,8 +287,6 @@ public class OMC extends Application {
     	OMC.PREFS = getSharedPreferences(SHAREDPREFNAME, Context.MODE_PRIVATE);
 		// We are using Zehro's solution (listening for TIME_TICK instead of using AlarmManager + FG Notification) which
 		// should be quite a bit more graceful.
-		OMC.FG = OMC.PREFS.getBoolean("widgetPersistence", false)? true : false;
-		
 		if (!OMC.PREFS.contains("weathersetting")){
 			OMC.PREFS.edit().putString("weathersetting", "bylatlong").commit();
 		}
@@ -366,7 +355,6 @@ public class OMC extends Application {
 		registerReceiver(OMC.aRC, new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED));
 		registerReceiver(OMC.aRC, new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
 		registerReceiver(OMC.aRC, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-		registerReceiver(OMC.aRC, new IntentFilter(OMC.FGINTENT.getAction()));
 		registerReceiver(OMC.aRC, new IntentFilter(OMC.BGINTENT.getAction()));
 		
 		OMC.TYPEFACEMAP = new HashMap<String, Typeface>(3);
@@ -536,13 +524,8 @@ public class OMC extends Application {
 	static void setServiceAlarm (long lTimeToRefresh) {
 		//We want the pending intent to be for this service, and 
 		// at the same FG/BG preference as the intent that woke us up
-		OMC.ALARMS.cancel(OMC.FGPENDING); 
 		OMC.ALARMS.cancel(OMC.BGPENDING);
-		if (OMC.FG) {
-			OMC.ALARMS.set(AlarmManager.RTC, lTimeToRefresh, OMC.FGPENDING);
-		} else {
-			OMC.ALARMS.set(AlarmManager.RTC, lTimeToRefresh, OMC.BGPENDING);
-		}
+		OMC.ALARMS.set(AlarmManager.RTC, lTimeToRefresh, OMC.BGPENDING);
     }
 
 	public static void setPrefs(int aWI) {
@@ -587,18 +570,20 @@ public class OMC extends Application {
 	
 	public static Typeface getTypeface(String sTheme, String src) {
 		if (src.equals("wef.ttf")) return OMC.WEATHERFONT;
-		//Look in memory cache;
-		if (OMC.TYPEFACEMAP.get(src)!=null) {
-			return OMC.TYPEFACEMAP.get(src);
-		}
-		//Look in app cache;
-		if (new File(OMC.CACHEPATH + sTheme + src).exists()) {
-				try {
-					OMC.TYPEFACEMAP.put(src, Typeface.createFromFile(OMC.CACHEPATH + sTheme + src));
-					return OMC.TYPEFACEMAP.get(src);
-				} catch (RuntimeException e) {
-					// if Cache is invalid, do nothing; we'll let this flow through to the full FS case.
-				}
+		if (OMC.THEMESFROMCACHE) {
+			//Look in memory cache;
+			if (OMC.TYPEFACEMAP.get(src)!=null) {
+				return OMC.TYPEFACEMAP.get(src);
+			}
+			//Look in app cache;
+			if (new File(OMC.CACHEPATH + sTheme + src).exists()) {
+					try {
+						OMC.TYPEFACEMAP.put(src, Typeface.createFromFile(OMC.CACHEPATH + sTheme + src));
+						return OMC.TYPEFACEMAP.get(src);
+					} catch (RuntimeException e) {
+						// if Cache is invalid, do nothing; we'll let this flow through to the full FS case.
+					}
+			}
 		}
 		//Look in full file system;
 		if (new File(src).exists()) {
@@ -666,15 +651,17 @@ public class OMC extends Application {
 			return getBitmap(sTheme, src2);
 		}
 
-		//Look in memory cache;
-		if (OMC.BMPMAP.get(src)!=null) {
-			return OMC.BMPMAP.get(src);
-		}
-
-		//Look in app cache;
-		if (new File(OMC.CACHEPATH + sTheme + src).exists()) {
-			OMC.BMPMAP.put(src, BitmapFactory.decodeFile(OMC.CACHEPATH + sTheme + src));
-			return OMC.BMPMAP.get(src);
+		if (OMC.THEMESFROMCACHE) {
+			//Look in memory cache;
+			if (OMC.BMPMAP.get(src)!=null) {
+				return OMC.BMPMAP.get(src);
+			}
+	
+			//Look in app cache;
+			if (new File(OMC.CACHEPATH + sTheme + src).exists()) {
+				OMC.BMPMAP.put(src, BitmapFactory.decodeFile(OMC.CACHEPATH + sTheme + src));
+				return OMC.BMPMAP.get(src);
+			}
 		}
 		// Look in SD path
 		if (OMC.checkSDPresent()) {
@@ -1598,16 +1585,6 @@ public class OMC extends Application {
 
     @Override
     public void onTerminate() {
-    	if (!OMCService.STOPNOW4x4 || !OMCService.STOPNOW4x2 || !OMCService.STOPNOW4x1 
-    			|| !OMCService.STOPNOW3x3 || !OMCService.STOPNOW3x1 
-    			|| !OMCService.STOPNOW2x2 || !OMCService.STOPNOW2x1
-    			|| !OMCService.STOPNOW1x3) {
-    		Log.i(OMC.OMCSHORT + "App","APP TERMINATED - NOT UNREGISTERING RECEIVERS - OMC WILL RESTART");
-    		// do nothing
-    	} else {
-    		Log.i(OMC.OMCSHORT + "App","APP TERMINATED - UNREGISTERING RECEIVERS - OMC WILL NOT RESTART");
-    		unregisterReceiver(aRC);
-    	}
         OMC.PREFS.edit().commit();
         super.onTerminate();
     }

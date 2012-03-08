@@ -28,20 +28,6 @@ public class ClockWidget3x3 extends AppWidgetProvider {
 		}
 	}
 
-//	When the very last widget is removed.
-	public void onDisabled(Context context) {
-
-		//Flag OMCService to stop.
-		OMCService.STOPNOW3x3=true;
-	}
-		
-//	This gets called when the very first widget is instantiated.
-	public void onEnabled(Context context) {
-
-		//Unflag the STOP FLAG for OMCService.
-		OMCService.STOPNOW3x3=false;
-	}
-	
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
@@ -64,10 +50,6 @@ public class ClockWidget3x3 extends AppWidgetProvider {
 	//	This should never fire since I implemented onReceive.
 	@Override
 	public void onUpdate(Context context, AppWidgetManager aWM, int[] appWidgetIds) {
-//		if (!OMCService.RUNNING) {
-//			OMC.setServiceAlarm(System.currentTimeMillis() + 500);
-//		}
-
 		final int N = appWidgetIds.length;
 		for (int i=0; i<N; i++) {
 		  	OMC.initPrefs(appWidgetIds[i]);

@@ -16,9 +16,7 @@
 	</PreferenceCategory>
 	<PreferenceCategory android:key="allClocks"
 		android:title="For all clocks:"><Preference android:title="Weather settings loading..." android:key="weather" android:summary="Tap to enable" />
-		<Preference android:key="weatherDisplay" android:title="Weather display settings" android:summary="C or F"/><CheckBoxPreference android:key="widgetPersistence"
-			android:selectable="true"
-			android:enabled="true" android:summary="Keep OMC from sleeping.\n(at the cost of a persistent notification)" android:title="Set Foreground Mode"/>
+		<Preference android:key="weatherDisplay" android:title="Weather display settings" android:summary="C or F"/>
 		
 		<ListPreference android:entryValues="@array/interval_values" android:entries="@array/interval_options" android:summary="Redraw Every 30 Seconds." android:enabled="true" android:selectable="true" android:title="Set Update Interval" android:key="sUpdateFreq"></ListPreference><PreferenceScreen android:key="widgetPrefs"
 			android:title="Toggle Widget Sizes">

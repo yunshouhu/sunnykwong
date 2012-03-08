@@ -35,9 +35,6 @@ public class OMCWidgetDrawEngine {
 		// Set target time slightly ahead to account for lag
 		OMC.TIME.set(((System.currentTimeMillis()+OMC.LEASTLAGMILLIS)*1000l)/1000l);
 
-//		if (!OMCService.RUNNING) {
-//			OMC.setServiceAlarm(System.currentTimeMillis() + 500);
-//		}
 		AppWidgetManager aWM = AppWidgetManager.getInstance(context);
 
 		final int N = aWM.getAppWidgetIds(cName)==null? 0: aWM.getAppWidgetIds(cName).length;
@@ -106,28 +103,28 @@ public class OMCWidgetDrawEngine {
 		// Entire homescreen is assumed to be 480dp x 600dp, 4 icons x 4 icons.
 		//
 		int thisWidgetWidth = 480;
-		int thisWidgetHeight = 660;
+		int thisWidgetHeight = 600;
 		if (sWidgetSize.equals("4x2")) {
 			thisWidgetWidth = 480;
-			thisWidgetHeight = 330;
+			thisWidgetHeight = 300;
 		} else if (sWidgetSize.equals("4x1")) {
 			thisWidgetWidth = 480;
-			thisWidgetHeight = 165;
+			thisWidgetHeight = 150;
 		} else if (sWidgetSize.equals("3x3")) {
 			thisWidgetWidth = 360;
-			thisWidgetHeight = 495;
+			thisWidgetHeight = 450;
 		} else if (sWidgetSize.equals("3x1")) {
 			thisWidgetWidth = 360;
-			thisWidgetHeight = 165;
+			thisWidgetHeight = 150;
 		} else if (sWidgetSize.equals("2x2")) {
 			thisWidgetWidth = 240;
-			thisWidgetHeight = 330;
+			thisWidgetHeight = 300;
 		} else if (sWidgetSize.equals("2x1")) {
 			thisWidgetWidth = 240;
-			thisWidgetHeight = 165;
+			thisWidgetHeight = 150;
 		} else if (sWidgetSize.equals("1x3")) {
 			thisWidgetWidth = 120;
-			thisWidgetHeight = 495;
+			thisWidgetHeight = 450;
 		}
 
 		//Step 3:

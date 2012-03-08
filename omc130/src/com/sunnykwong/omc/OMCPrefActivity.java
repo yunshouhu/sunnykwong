@@ -146,7 +146,6 @@ public class OMCPrefActivity extends PreferenceActivity implements OnPreferenceC
 			if (OMC.SINGLETON) setTitle(OMC.SINGLETONNAME + " - Preferences");
 
 			OMC.getPrefs(appWidgetID);
-        	OMC.PREFS.edit().putBoolean("widgetPersistence", OMC.FG).commit();
         	OMC.PREFS.edit().putBoolean("bFourByTwo", true).commit();
         	
         	if (OMC.FREEEDITION) {
@@ -604,7 +603,6 @@ public class OMCPrefActivity extends PreferenceActivity implements OnPreferenceC
 		if (appWidgetID >= 0) {
 
 			if (OMC.DEBUG) Log.i(OMC.OMCSHORT + "Pref","Saving Prefs for Widget " + OMCPrefActivity.appWidgetID);
-			OMC.FG = OMC.PREFS.getBoolean("widgetPersistence", true)? true : false;
 			OMC.UPDATEFREQ = Integer.parseInt(OMC.PREFS.getString("sUpdateFreq", "30")) * 1000;
 	    	OMC.setPrefs(OMCPrefActivity.appWidgetID);
 	    	if (OMC.WIDGETBMPMAP.containsKey(OMCPrefActivity.appWidgetID)) {

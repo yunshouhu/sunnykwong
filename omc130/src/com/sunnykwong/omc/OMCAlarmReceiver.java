@@ -20,9 +20,7 @@ public class OMCAlarmReceiver extends BroadcastReceiver {
 		// If we come back from a low memory state, all sorts of screwy stuff might happen.
 		// If the Intent itself is null, let's create one.
 		if (intent == null) {
-			OMC.FG=true;
 			OMC.SCREENON=true;
-			OMC.SVCSTARTINTENT.setAction("com.sunnykwong.omc.FGSERVICE");
 		}
 
 		final String action = intent.getAction();
@@ -30,9 +28,7 @@ public class OMCAlarmReceiver extends BroadcastReceiver {
 		// the Intent action might be blank.
 		// In that case, we take an educated guess and say it's a foreground situation.
 		if (action==null) {
-			OMC.FG=true;
 			OMC.SCREENON=true;
-			OMC.SVCSTARTINTENT.setAction("com.sunnykwong.omc.FGSERVICE");
 		}
 
 		
@@ -90,9 +86,6 @@ public class OMCAlarmReceiver extends BroadcastReceiver {
 			}
 		}
 		
-		if (action.equals(OMC.FGINTENT)) OMC.SVCSTARTINTENT.setAction("com.sunnykwong.omc.FGSERVICE");
-		else OMC.SVCSTARTINTENT.setAction("com.sunnykwong.omc.BGSERVICE");
-		
 		// Do nothing if the screen turns off, but
 		// Start working again if the screen turns on.
 		// This obviously saves CPU cycles (and battery).
@@ -112,20 +105,18 @@ public class OMCAlarmReceiver extends BroadcastReceiver {
 		// If the screen is on, honor the update frequency.
 		if (OMC.SCREENON) {
 			// Prevent abusive updates - update no more than every .5 secs.
-			if (System.currentTimeMillis()-OMC.LASTUPDATEMILLIS < 500l && (action.equals(OMC.FGINTENT.getAction()) || action.equals(OMC.BGINTENT.getAction()) || action.equals(Intent.ACTION_TIME_TICK))) {
+			if (System.currentTimeMillis()-OMC.LASTUPDATEMILLIS < 500l && (action.equals(OMC.BGINTENT.getAction()) || action.equals(Intent.ACTION_TIME_TICK))) {
 				if (OMC.DEBUG) Log.i(OMC.OMCSHORT + "Alarm","Last upd was " + (System.currentTimeMillis()-OMC.LASTUPDATEMILLIS) + "ms ago! Not redrawing clocks again.");
 				return;
 			}
 			OMC.LASTUPDATEMILLIS = System.currentTimeMillis();
 			context.sendBroadcast(OMC.WIDGETREFRESHINTENT);
-			//context.startService(OMC.SVCSTARTINTENT);
 		// If the screen is off, update bare minimum to mimic foreground mode.
 		} else if (action.equals(Intent.ACTION_TIME_TICK)
 				||action.equals(Intent.ACTION_TIME_CHANGED)
 				||action.equals(Intent.ACTION_TIMEZONE_CHANGED)) {
 			OMC.LASTUPDATEMILLIS = System.currentTimeMillis();
 			context.sendBroadcast(OMC.WIDGETREFRESHINTENT);
-//			context.startService(OMC.SVCSTARTINTENT);
 		} else {
 			OMC.LASTUPDATEMILLIS = System.currentTimeMillis();
 			if (OMC.DEBUG) Log.i(OMC.OMCSHORT + "Alarm","I think scrn is off... no refresh");
